@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flow Finance | Login</title>
+    
+    <!-- PWA META TAGS -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Flow Finance">
+    <meta name="theme-color" content="#0d2e27">
+    <link rel="apple-touch-icon" href="/icon-192.svg">
+    <link rel="manifest" href="/manifest.json">
+
+    <!-- EXTERNAL LIBRARIES -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- STYLES -->
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center min-h-screen p-2 md:p-4">
+    <!-- LOGIN PAGE -->
+    <div class="w-full max-w-md">
+        <!-- Logo & Title -->
+        <div class="text-center mb-6 md:mb-10">
+            <div class="w-12 h-12 md:w-16 md:h-16 mx-auto mb-4 sidebar-logo">
+                <img src="/logo.svg" alt="Flow Finance" class="w-full h-full object-contain" onerror="this.onerror=null; this.src='/icon-192.svg';" />
+            </div>
+            <h1 class="text-2xl md:text-3xl font-extrabold text-slate-900 mb-2">Flow Finance</h1>
+            <p class="text-sm text-slate-500">Manage your finances with ease</p>
+        </div>
+
+        <!-- Login/Signup Form -->
+        <div class="bg-white rounded-[32px] p-6 md:p-8 shadow-lg border border-slate-100">
+            <!-- Tabs -->
+            <div class="flex mb-8 bg-slate-100 p-1 rounded-xl">
+                <button type="button" onclick="switchAuthMode('login')" id="loginTab" class="flex-1 py-2.5 text-xs font-black rounded-lg bg-white shadow text-[#0d2e27] uppercase transition-all">Login</button>
+                <button type="button" onclick="switchAuthMode('signup')" id="signupTab" class="flex-1 py-2.5 text-xs font-black rounded-lg text-slate-400 uppercase transition-all">Sign Up</button>
+            </div>
+
+            <!-- Login Form -->
+            <form id="loginForm" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-2 uppercase">Email</label>
+                    <input type="email" id="loginEmail" required placeholder="your@email.com" class="w-full bg-slate-50 rounded-xl p-3.5 text-sm font-semibold outline-none border border-slate-100 focus:border-[#0d2e27] transition-colors">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-2 uppercase">Password</label>
+                    <input type="password" id="loginPassword" required placeholder="••••••••" class="w-full bg-slate-50 rounded-xl p-3.5 text-sm font-semibold outline-none border border-slate-100 focus:border-[#0d2e27] transition-colors">
+                </div>
+                <button type="submit" id="loginBtn" class="w-full bg-[#0d2e27] text-white font-bold py-3.5 rounded-xl hover:shadow-lg transition-all">Login</button>
+            </form>
+
+            <!-- Signup Form -->
+            <form id="signupForm" class="space-y-4 hidden">
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-2 uppercase">Full Name</label>
+                    <input type="text" id="signupName" required placeholder="John Doe" class="w-full bg-slate-50 rounded-xl p-3.5 text-sm font-semibold outline-none border border-slate-100 focus:border-[#0d2e27] transition-colors">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-2 uppercase">Email</label>
+                    <input type="email" id="signupEmail" required placeholder="your@email.com" class="w-full bg-slate-50 rounded-xl p-3.5 text-sm font-semibold outline-none border border-slate-100 focus:border-[#0d2e27] transition-colors">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-2 uppercase">Password</label>
+                    <input type="password" id="signupPassword" required placeholder="••••••••" class="w-full bg-slate-50 rounded-xl p-3.5 text-sm font-semibold outline-none border border-slate-100 focus:border-[#0d2e27] transition-colors">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-2 uppercase">Confirm Password</label>
+                    <input type="password" id="signupConfirm" required placeholder="••••••••" class="w-full bg-slate-50 rounded-xl p-3.5 text-sm font-semibold outline-none border border-slate-100 focus:border-[#0d2e27] transition-colors">
+                </div>
+                <button type="submit" id="signupBtn" class="w-full bg-[#0d2e27] text-white font-bold py-3.5 rounded-xl hover:shadow-lg transition-all">Create Account</button>
+            </form>
+
+            <p class="text-center text-[10px] text-slate-400 mt-6 font-semibold uppercase">Secure authentication powered by Firebase</p>
+            <p id="demoModeIndicator" class="text-center text-[9px] text-emerald-600 mt-2 font-semibold uppercase hidden">Demo Mode: Use any email/password to login</p>
+        </div>
+    </div>
+
+    <!-- ERROR TOAST -->
+    <div id="errorToast" class="fixed top-4 right-4 z-[300] hidden">
+        <div class="bg-red-500 text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center space-x-3">
+            <i data-lucide="alert-circle" class="w-5 h-5"></i>
+            <span id="errorMessage" class="text-sm font-bold"></span>
+        </div>
+    </div>
+
+    <!-- SUCCESS TOAST -->
+    <div id="successToast" class="fixed top-4 right-4 z-[300] hidden">
+        <div class="bg-emerald-500 text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center space-x-3">
+            <i data-lucide="check-circle" class="w-5 h-5"></i>
+            <span id="successMessage" class="text-sm font-bold"></span>
+        </div>
+    </div>
+
+    <!-- LOADING OVERLAY -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-white z-[200] flex items-center justify-center">
+        <div class="flex flex-col items-center">
+            <div class="w-12 h-12 border-4 border-slate-200 border-t-[#0d2e27] rounded-full animate-spin mb-4"></div>
+            <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Securing Connection...</p>
+        </div>
+    </div>
+
+    <!-- Runtime config (create public/runtime-config.js from runtime-config.example.js) -->
+    <script src="/runtime-config.js"></script>
+    <!-- AUTHENTICATION SCRIPT -->
+    <script type="module" src="js/login.js"></script>
+</body>
+</html>

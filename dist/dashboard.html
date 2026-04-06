@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flow Finance | Dashboard</title>
+    
+    <!-- PWA META TAGS -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Flow Finance">
+    <meta name="theme-color" content="#0d2e27">
+    <link rel="apple-touch-icon" href="/icon-192.svg">
+    <link rel="manifest" href="/manifest.json">
+
+    <!-- EXTERNAL LIBRARIES -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <!-- STYLES -->
+
+    
+    <!-- PWA SERVICE WORKER -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('Service Worker registered'))
+                    .catch(err => console.log('Service Worker registration failed:', err));
+            });
+        }
+        
+        // Install prompt handling
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            // Show install button here if you have one
+            console.log('PWA install prompt available');
+        });
+    </script>
+  <script type="module" crossorigin src="/assets/dashboard-7CxZK7TV.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/config-C-uQ2M4f.js">
+  <link rel="stylesheet" crossorigin href="/assets/styles-BqCEq5Oo.css">
+</head>
+<body class="flex flex-col md:flex-row min-h-screen">
+    <!-- CONTENT STRUCTURE -->
+
+    <!-- ERROR TOAST -->
+    <div id="errorToast" class="fixed top-4 right-4 z-[300] hidden">
+        <div class="bg-red-500 text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center space-x-3">
+            <i data-lucide="alert-circle" class="w-5 h-5"></i>
+            <span id="errorMessage" class="text-sm font-bold"></span>
+        </div>
+    </div>
+
+    <!-- SUCCESS TOAST -->
+    <div id="successToast" class="fixed top-4 right-4 z-[300] hidden">
+        <div class="bg-emerald-500 text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center space-x-3">
+            <i data-lucide="check-circle" class="w-5 h-5"></i>
+            <span id="successMessage" class="text-sm font-bold"></span>
+        </div>
+    </div>
+
+    <!-- LOADING OVERLAY -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-white z-[200] flex items-center justify-center">
+        <div class="flex flex-col items-center">
+            <div class="w-12 h-12 border-4 border-slate-200 border-t-[#0d2e27] rounded-full animate-spin mb-4"></div>
+            <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Securing Connection...</p>
+        </div>
+    </div>
+
+    <!-- MOBILE DRAWER -->
+    <div id="mobileDrawerOverlay" class="hidden fixed inset-0 bg-slate-900/60 z-[60] md:hidden" onclick="toggleMobileSidebar()"></div>
+    <aside id="sidebarNav" class="mobile-drawer fixed md:sticky top-0 left-0 h-screen w-64 bg-white border-r border-slate-100 p-6 z-[70] flex flex-col -translate-x-full md:translate-x-0">
+        <div class="mb-10 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-14 h-14 flex-shrink-0 sidebar-logo">
+                    <img src="data:image/svg+xml,%3csvg%20width='64'%20height='64'%20viewBox='0%200%2064%2064'%20fill='none'%20xmlns='http://www.w3.org/2000/svg'%3e%3c!--%20Background%20removed%20for%20transparency%20--%3e%3c!--%20%3crect%20width='64'%20height='64'%20rx='16'%20fill='%230d2e27'/%3e%20--%3e%3c!--%20Coin%20circles%20--%3e%3ccircle%20cx='24'%20cy='24'%20r='14'%20fill='%2310b981'%20opacity='0.2'/%3e%3ccircle%20cx='40'%20cy='40'%20r='14'%20fill='%2310b981'%20opacity='0.2'/%3e%3c!--%20Main%20coin%20--%3e%3ccircle%20cx='24'%20cy='24'%20r='12'%20fill='%2310b981'%20stroke='%230d2e27'%20stroke-width='2'/%3e%3c!--%20Coin%20details%20--%3e%3ccircle%20cx='24'%20cy='24'%20r='8'%20fill='none'%20stroke='%230d2e27'%20stroke-width='1.5'%20opacity='0.6'/%3e%3cline%20x1='20'%20y1='24'%20x2='28'%20y2='24'%20stroke='%230d2e27'%20stroke-width='2'/%3e%3cline%20x1='24'%20y1='20'%20x2='24'%20y2='28'%20stroke='%230d2e27'%20stroke-width='2'/%3e%3c!--%20Rising%20arrow%20--%3e%3cpath%20d='M%2036%2048%20L%2044%2040%20L%2040%2040%20L%2040%2028%20L%2048%2028'%20stroke='%2310b981'%20stroke-width='2.5'%20fill='none'%20stroke-linecap='round'%20stroke-linejoin='round'/%3e%3c!--%20Trend%20line%20--%3e%3cpath%20d='M%2020%2036%20Q%2028%2028%2036%2032'%20stroke='%2310b981'%20stroke-width='2'%20fill='none'%20stroke-linecap='round'%20opacity='0.7'/%3e%3c/svg%3e" alt="Flow Finance" class="w-full h-full object-contain" onerror="this.onerror=null; this.src='/icon-192.svg';" />
+                </div>
+                <div>
+                    <h1 class="text-lg font-extrabold text-slate-900 tracking-tight leading-none">Flow Finance</h1>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Wealth Management</p>
+                </div>
+            </div>
+            <button onclick="toggleMobileSidebar()" class="md:hidden p-2 text-slate-400" aria-label="Close menu">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-slate-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+
+        <nav class="space-y-2 flex-1">
+            <button onclick="switchSection('overview')" id="nav-overview" class="nav-item active w-full flex items-center space-x-3 p-3 rounded-2xl transition-all">
+                <i data-lucide="layout-grid" class="w-5 h-5"></i>
+                <span class="font-bold text-sm">Overview</span>
+            </button>
+            <button onclick="switchSection('income')" id="nav-income" class="nav-item w-full flex items-center space-x-3 p-3 rounded-2xl text-slate-400 hover:bg-slate-50 transition-all">
+                <i data-lucide="arrow-up-circle" class="w-5 h-5"></i>
+                <span class="font-bold text-sm">Income</span>
+            </button>
+            <button onclick="switchSection('expenses')" id="nav-expenses" class="nav-item w-full flex items-center space-x-3 p-3 rounded-2xl text-slate-400 hover:bg-slate-50 transition-all">
+                <i data-lucide="arrow-down-circle" class="w-5 h-5"></i>
+                <span class="font-bold text-sm">Expenses</span>
+            </button>
+            <button onclick="switchSection('budgets')" id="nav-budgets" class="nav-item w-full flex items-center space-x-3 p-3 rounded-2xl text-slate-400 hover:bg-slate-50 transition-all">
+                <i data-lucide="pie-chart" class="w-5 h-5"></i>
+                <span class="font-bold text-sm">Budgets</span>
+            </button>
+            <button onclick="switchSection('split')" id="nav-split" class="nav-item w-full flex items-center space-x-3 p-3 rounded-2xl text-slate-400 hover:bg-slate-50 transition-all">
+                <i data-lucide="users" class="w-5 h-5"></i>
+                <span class="font-bold text-sm">Split Expenses</span>
+            </button>
+        </nav>
+
+        <div class="space-y-4">
+            <div class="p-4 bg-slate-50 rounded-[24px] border border-slate-100">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p id="sidebarUserName" class="text-xs font-bold text-slate-700 mb-1 truncate">User Name</p>
+                        <h4 id="sidebarBalance" class="text-xl font-extrabold text-slate-900">₹0</h4>
+                    </div>
+                    <button onclick="editBalances()" class="text-xs px-2 py-1 bg-slate-100 rounded-lg text-slate-600">Edit</button>
+                </div>
+                <div class="mt-3 grid grid-cols-2 gap-2 text-sm">
+                    <div class="bg-white p-2 rounded-xl border border-slate-100 text-center">
+                        <div class="text-xs text-slate-400">Account</div>
+                        <div id="accountBalance" class="font-bold text-slate-800">₹0</div>
+                    </div>
+                    <div class="bg-white p-2 rounded-xl border border-slate-100 text-center">
+                        <div class="text-xs text-slate-400">Hand Cash</div>
+                        <div id="handCash" class="font-bold text-slate-800">₹0</div>
+                    </div>
+                </div>
+            </div>
+            <button onclick="logout()" class="w-full flex items-center justify-center space-x-2 p-3 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl transition-colors font-bold text-sm">
+                <i data-lucide="log-out" class="w-5 h-5"></i>
+                <span>Logout</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- MOBILE TOP BAR -->
+    <div class="md:hidden flex items-center justify-between p-4 bg-white border-b border-slate-100 sticky top-0 z-50">
+        <div class="flex items-center space-x-2">
+            <div class="w-8 h-8 sidebar-logo">
+                <img src="data:image/svg+xml,%3csvg%20width='64'%20height='64'%20viewBox='0%200%2064%2064'%20fill='none'%20xmlns='http://www.w3.org/2000/svg'%3e%3c!--%20Background%20removed%20for%20transparency%20--%3e%3c!--%20%3crect%20width='64'%20height='64'%20rx='16'%20fill='%230d2e27'/%3e%20--%3e%3c!--%20Coin%20circles%20--%3e%3ccircle%20cx='24'%20cy='24'%20r='14'%20fill='%2310b981'%20opacity='0.2'/%3e%3ccircle%20cx='40'%20cy='40'%20r='14'%20fill='%2310b981'%20opacity='0.2'/%3e%3c!--%20Main%20coin%20--%3e%3ccircle%20cx='24'%20cy='24'%20r='12'%20fill='%2310b981'%20stroke='%230d2e27'%20stroke-width='2'/%3e%3c!--%20Coin%20details%20--%3e%3ccircle%20cx='24'%20cy='24'%20r='8'%20fill='none'%20stroke='%230d2e27'%20stroke-width='1.5'%20opacity='0.6'/%3e%3cline%20x1='20'%20y1='24'%20x2='28'%20y2='24'%20stroke='%230d2e27'%20stroke-width='2'/%3e%3cline%20x1='24'%20y1='20'%20x2='24'%20y2='28'%20stroke='%230d2e27'%20stroke-width='2'/%3e%3c!--%20Rising%20arrow%20--%3e%3cpath%20d='M%2036%2048%20L%2044%2040%20L%2040%2040%20L%2040%2028%20L%2048%2028'%20stroke='%2310b981'%20stroke-width='2.5'%20fill='none'%20stroke-linecap='round'%20stroke-linejoin='round'/%3e%3c!--%20Trend%20line%20--%3e%3cpath%20d='M%2020%2036%20Q%2028%2028%2036%2032'%20stroke='%2310b981'%20stroke-width='2'%20fill='none'%20stroke-linecap='round'%20opacity='0.7'/%3e%3c/svg%3e" alt="Flow Finance" class="w-full h-full">
+            </div>
+            <h1 class="font-extrabold text-lg text-slate-900">Flow Finance</h1>
+        </div>
+        <div class="flex items-center space-x-2">
+            <button onclick="exportToExcel()" class="p-2.5 bg-slate-50 rounded-xl text-emerald-600 border border-slate-100" aria-label="Export Excel">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 stroke-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v8m0 0l3-3m-3 3l-3-3" />
+                </svg>
+            </button>
+            <button onclick="toggleMobileSidebar()" class="p-2.5 bg-slate-50 rounded-xl text-slate-600 border border-slate-100" aria-label="Toggle menu">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 p-4 md:p-5 lg:p-10 xl:p-14">
+        <header class="mb-6 md:mb-10 flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6">
+            <div>
+                <h2 id="sectionTitle" class="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">Dashboard Overview</h2>
+                <p id="sectionDesc" class="text-slate-400 mt-1">Track your financial pulse</p>
+            </div>
+            <button onclick="exportToExcel()" class="flex items-center space-x-2 bg-white border border-slate-200 px-4 md:px-6 py-2.5 md:py-3 rounded-2xl text-sm font-bold hover:bg-slate-50 transition-all card-shadow">
+                <i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-600"></i>
+                <span>Export Excel</span>
+            </button>
+        </header>
+
+        <div id="section-overview" class="section-fade">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-10">
+                <div class="bg-white p-5 md:p-7 rounded-[24px] md:rounded-[32px] border border-slate-100 card-shadow">
+                    <p class="text-xs font-bold text-slate-400 uppercase mb-2 tracking-widest">Total Income</p>
+                    <h3 id="statIncome" class="text-xl md:text-2xl font-extrabold text-emerald-600">$0.00</h3>
+                </div>
+                <div class="bg-white p-5 md:p-7 rounded-[24px] md:rounded-[32px] border border-slate-100 card-shadow">
+                    <p class="text-xs font-bold text-slate-400 uppercase mb-2 tracking-widest">Total Expenses</p>
+                    <h3 id="statExpense" class="text-xl md:text-2xl font-extrabold text-orange-600">$0.00</h3>
+                </div>
+                <div class="bg-white p-5 md:p-7 rounded-[24px] md:rounded-[32px] border border-slate-100 card-shadow">
+                    <p class="text-xs font-bold text-slate-400 uppercase mb-2 tracking-widest">Savings Goal (20%)</p>
+                    <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden mb-3">
+                        <div id="savingsBar" class="bg-emerald-500 h-full rounded-full transition-all" style="width: 0%"></div>
+                    </div>
+                    <p id="savingsPerc" class="text-xs font-black text-emerald-600">0% Collected</p>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
+                <div class="lg:col-span-2 bg-white p-6 md:p-8 rounded-[24px] md:rounded-[32px] border border-slate-100 card-shadow">
+                    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+                        <h4 class="text-lg font-bold text-slate-900">Cash Flow Analysis</h4>
+                        <div class="flex flex-col sm:flex-row gap-2 text-xs flex-wrap">
+                            <select id="chartDateFilter" class="bg-slate-50 rounded-xl p-2 border border-slate-100 outline-none">
+                                <option value="30">Last 30 Days</option>
+                                <option value="90">Last 90 Days</option>
+                                <option value="365">Last Year</option>
+                                <option value="all">All Time</option>
+                            </select>
+                            <input type="date" id="chartStartDate" class="bg-slate-50 rounded-xl p-2 border border-slate-100 outline-none">
+                            <input type="date" id="chartEndDate" class="bg-slate-50 rounded-xl p-2 border border-slate-100 outline-none">
+                            <button id="filterChartBtn" class="bg-[#0d2e27] text-white px-4 rounded-xl text-xs font-bold whitespace-nowrap hover:opacity-90 transition-opacity">Filter</button>
+                        </div>
+                    </div>
+                    <div class="h-64"><canvas id="overviewChart"></canvas></div>
+                </div>
+                <div class="bg-white p-5 md:p-6 rounded-[24px] md:rounded-[32px] border border-slate-100 card-shadow">
+    
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 mt-6 md:mt-8">
+                <div class="bg-white p-6 md:p-8 rounded-[24px] md:rounded-[32px] border border-slate-100 card-shadow">
+                    <h4 class="text-lg font-bold text-slate-900 mb-6 md:mb-8">Expense Breakdown</h4>
+                    <div class="h-64 md:h-80"><canvas id="expensePieChart"></canvas></div>
+                </div>
+                <div class="bg-white p-6 md:p-8 rounded-[24px] md:rounded-[32px] border border-slate-100 card-shadow">
+                    <h4 class="text-lg font-bold text-slate-900 mb-6 md:mb-8">Spending by Category</h4>
+                    <div class="h-64 md:h-80"><canvas id="categoryBarChart"></canvas></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="section-income" class="hidden section-fade">
+            <div class="bg-white rounded-[24px] md:rounded-[32px] border border-slate-100 card-shadow overflow-x-auto">
+                <table class="w-full text-left min-w-[500px]">
+                    <thead class="bg-slate-50 border-b border-slate-100">
+                        <tr><th class="p-3 md:p-5 text-xs font-bold text-slate-400 uppercase">Source</th><th class="p-3 md:p-5 text-xs font-bold text-slate-400 uppercase">Date</th><th class="p-3 md:p-5 text-xs font-bold text-slate-400 uppercase">Category</th><th class="p-3 md:p-5 text-xs font-bold text-slate-400 uppercase">Notes</th><th class="p-3 md:p-5 text-xs font-bold text-slate-400 uppercase text-right">Amount</th></tr>
+                    </thead>
+                    <tbody id="incomeTable"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="section-expenses" class="hidden section-fade">
+            <div class="bg-white rounded-[24px] md:rounded-[32px] border border-slate-100 card-shadow overflow-x-auto">
+                <table class="w-full text-left min-w-[500px]">
+                    <thead class="bg-slate-50 border-b border-slate-100">
+                        <tr><th class="p-3 md:p-5 text-xs font-bold text-slate-400 uppercase">Expense</th><th class="p-3 md:p-5 text-xs font-bold text-slate-400 uppercase">Date</th><th class="p-3 md:p-5 text-xs font-bold text-slate-400 uppercase">Category</th><th class="p-3 md:p-5 text-xs font-bold text-slate-400 uppercase">Notes</th><th class="p-3 md:p-5 text-xs font-bold text-slate-400 uppercase text-right">Amount</th></tr>
+                    </thead>
+                    <tbody id="expenseTable"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="section-budgets" class="hidden section-fade">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="budgetGrid"></div>
+        </div>
+
+        <div id="section-settings" class="hidden section-fade">
+            <div class="space-y-4 md:space-y-6">
+                <div class="bg-white p-6 md:p-8 rounded-[24px] md:rounded-[32px] border border-slate-100 card-shadow">
+                    <h4 class="text-lg font-bold mb-4">Category Management</h4>
+                    <p class="text-sm text-slate-500">Categories are now managed inline from the New Entry modal. Use the quick category input next to the category selector when creating an entry.</p>
+                </div>
+                
+                <div class="bg-white p-6 md:p-8 rounded-[24px] md:rounded-[32px] border border-slate-100 card-shadow">
+                    <h4 class="text-lg font-bold mb-2">Reset Data</h4>
+                    <p class="text-sm text-slate-500 mb-4 md:mb-6">Start fresh by clearing all transactions, expenses, and settings. This action cannot be undone.</p>
+                    <button onclick="resetApp()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 md:px-6 rounded-2xl transition-all">
+                        <i data-lucide="trash-2" class="w-4 h-4 inline mr-2"></i>
+                        Reset Everything
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="section-split" class="hidden section-fade">
+            <div class="bg-white rounded-[24px] md:rounded-[32px] border border-slate-100 card-shadow overflow-x-auto">
+                <table class="w-full text-left min-w-[700px]">
+                    <thead class="bg-slate-50 border-b border-slate-100">
+                        <tr><th class="p-3 md:p-5 text-xs font-bold text-slate-400 uppercase">Expense</th><th class="p-3 md:p-5 text-xs font-bold text-slate-400 uppercase">Date</th><th class="p-3 md:p-5 text-xs font-bold text-slate-400 uppercase">Payment Status</th><th class="p-3 md:p-5 text-xs font-bold text-slate-400 uppercase">Your Share</th><th class="p-3 md:p-5 text-xs font-bold text-slate-400 uppercase text-right">Total</th></tr>
+                    </thead>
+                    <tbody id="splitTable"></tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+
+
+    <!-- FAB MENU -->
+    <div id="fabMenu" class="hidden fixed bottom-20 right-6 z-40 space-y-3">
+        <button onclick="openSplitModal(); closeFabMenu()" class="flex items-center space-x-3 bg-white shadow-lg rounded-2xl p-4 w-48 hover:shadow-xl transition-all">
+            <i data-lucide="users" class="w-5 h-5 text-emerald-700"></i>
+            <span class="font-bold text-sm">Split Expense</span>
+        </button>
+        <button onclick="openModal(); closeFabMenu()" class="flex items-center space-x-3 bg-white shadow-lg rounded-2xl p-4 w-48 hover:shadow-xl transition-all">
+            <i data-lucide="plus-circle" class="w-5 h-5 text-emerald-700"></i>
+            <span class="font-bold text-sm">Income/Expense</span>
+        </button>
+    </div>
+
+    <!-- FAB -->
+    <button onclick="toggleFabMenu()" class="fixed bottom-6 right-6 w-14 h-14 bg-[#0d2e27] text-white rounded-2xl shadow-2xl flex items-center justify-center hover:scale-105 transition-all z-50" aria-label="Add entry">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-6 h-6">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+        </svg>
+    </button>
+
+    <!-- ENTRY MODAL -->
+    <div id="modalOverlay" class="hidden fixed inset-0 bg-slate-900/60 z-[100] flex items-center justify-center p-2 md:p-4">
+        <div class="bg-white w-full max-w-sm md:max-w-md rounded-[24px] md:rounded-[32px] p-6 md:p-8 shadow-2xl">
+            <div class="flex justify-between items-center mb-4 md:mb-6">
+                <h3 class="text-lg md:text-xl font-bold">New Entry</h3>
+                <button onclick="closeModal()" class="p-2 text-slate-400"><i data-lucide="x"></i></button>
+            </div>
+            <form id="mainForm" class="space-y-4 md:space-y-5">
+                <div class="flex bg-slate-100 p-1 rounded-xl">
+                    <button type="button" onclick="setEntryType('income')" id="typeInc" class="flex-1 py-2.5 text-xs font-black rounded-lg bg-white shadow text-emerald-600 uppercase">Income</button>
+                    <button type="button" onclick="setEntryType('expense')" id="typeExp" class="flex-1 py-2.5 text-xs font-black rounded-lg text-slate-400 uppercase">Expense</button>
+                </div>
+                <input type="hidden" id="formType" value="income">
+                <input type="text" id="fTitle" required placeholder="Description" class="w-full bg-slate-50 rounded-xl p-3.5 text-sm font-semibold outline-none border border-slate-100">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    <input type="number" step="0.01" id="fAmount" required placeholder="Amount (0.00)" class="w-full bg-slate-50 rounded-xl p-3.5 text-sm font-bold outline-none border border-slate-100">
+                    <input type="date" id="fDate" class="w-full bg-slate-50 rounded-xl p-3.5 text-sm font-semibold outline-none border border-slate-100">
+                </div>
+                <div class="flex flex-col md:flex-row gap-2">
+                    <select id="fCategory" class="category-select w-full flex-1 bg-slate-50 rounded-xl p-3.5 text-sm font-semibold outline-none border border-slate-100"></select>
+                    <input id="quickCat" placeholder="Add" class="w-full bg-slate-50 rounded-xl p-3.5 text-sm outline-none border border-slate-100">
+                    <button type="button" onclick="addQuickCategory()" class="w-full md:w-auto bg-[#0d2e27] text-white px-4 md:px-3 rounded-xl text-xs font-bold whitespace-nowrap">Add</button>
+                </div>
+                <div class="flex items-center gap-2">
+                    <label class="text-xs font-bold text-slate-600 uppercase">Paid From</label>
+                    <select id="fPaidFrom" class="bg-slate-50 rounded-xl p-3.5 text-sm font-semibold outline-none border border-slate-100 w-full md:w-48">
+                        <option value="account">Account</option>
+                        <option value="hand">Hand Cash</option>
+                    </select>
+                </div>
+                <textarea id="fNotes" placeholder="Add notes (optional)" class="w-full bg-slate-50 rounded-xl p-3.5 text-sm font-semibold outline-none border border-slate-100 resize-none h-20"></textarea>
+                <button type="submit" id="saveBtn" class="w-full bg-[#0d2e27] text-white font-bold py-4 rounded-2xl">Save Record</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- SPLIT EXPENSE MODAL -->
+    <div id="splitModalOverlay" class="hidden fixed inset-0 bg-slate-900/60 z-[100] flex items-center justify-center p-2 md:p-4">
+        <div class="bg-white w-full max-w-sm md:max-w-md rounded-[24px] md:rounded-[32px] p-6 md:p-8 shadow-2xl">
+            <div class="flex justify-between items-center mb-4 md:mb-6">
+                <h3 class="text-lg md:text-xl font-bold">Split Expense</h3>
+                <button onclick="closeSplitModal()" class="p-2 text-slate-400"><i data-lucide="x"></i></button>
+            </div>
+            <form id="splitForm" class="space-y-4 md:space-y-5">
+                <input type="text" id="splitTitle" required placeholder="Expense description" class="w-full bg-slate-50 rounded-xl p-3.5 text-sm font-semibold outline-none border border-slate-100">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    <input type="number" step="0.01" id="splitAmount" required placeholder="Total amount (0.00)" class="w-full bg-slate-50 rounded-xl p-3.5 text-sm font-bold outline-none border border-slate-100">
+                    <input type="date" id="splitDate" class="w-full bg-slate-50 rounded-xl p-3.5 text-sm font-semibold outline-none border border-slate-100">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-3 uppercase">Add Friends</label>
+                    <div id="friendsList" class="space-y-3 mb-4"></div>
+                    <button type="button" onclick="addFriendField()" class="w-full border border-dashed border-slate-300 p-3 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors">
+                        <i data-lucide="plus" class="w-4 h-4 inline mr-1"></i>Add Friend
+                    </button>
+                </div>
+                <div class="bg-slate-50 p-4 rounded-xl">
+                    <label class="flex items-center gap-2 text-xs font-bold text-slate-700 mb-2 uppercase cursor-pointer">
+                        <input type="checkbox" id="manualSplitToggle" onchange="toggleManualSplit()" class="rounded">
+                        Manual Amount per Friend
+                    </label>
+                    <div id="manualSplitHint" class="text-[10px] text-slate-500 hidden">Each friend's amount can be different</div>
+                </div>
+                <textarea id="splitNotes" placeholder="Notes (optional)" class="w-full bg-slate-50 rounded-xl p-3.5 text-sm font-semibold outline-none border border-slate-100 resize-none h-16"></textarea>
+                <button type="submit" id="saveSplitBtn" class="w-full bg-[#0d2e27] text-white font-bold py-4 rounded-2xl">Save Split</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- SPLIT DETAILS MODAL -->
+    <div id="splitDetailsOverlay" class="hidden fixed inset-0 bg-slate-900/60 z-[100] flex items-center justify-center p-2 md:p-4">
+        <div class="bg-white w-full max-w-sm md:max-w-md rounded-[24px] md:rounded-[32px] p-6 md:p-8 shadow-2xl max-h-96 overflow-y-auto">
+            <div class="flex justify-between items-center mb-4 md:mb-6">
+                <h3 class="text-lg md:text-xl font-bold">Payment Status</h3>
+                <button onclick="closeSplitDetails()" class="p-2 text-slate-400"><i data-lucide="x"></i></button>
+            </div>
+            <div id="splitDetailsContent" class="space-y-3"></div>
+        </div>
+    </div>
+
+    <!-- FIREBASE MODULES - LOADED FROM MODULAR FILES -->
+    <!-- Runtime config (create public/runtime-config.js from runtime-config.example.js) -->
+    <script src="/runtime-config.js"></script>
+
+</body>
+</html>

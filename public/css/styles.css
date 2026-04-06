@@ -1,0 +1,197 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+:root {
+    --primary-dark: #0d2e27;
+}
+
+/* Ensure logo visibility on both light and dark backgrounds */
+.sidebar-logo {
+    background: #ffffff;
+    border-radius: 0.5rem;
+    padding: 0.25rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.sidebar-logo img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background-color: #fcfcfc;
+    color: #1e293b;
+    overflow-x: hidden;
+}
+
+main {
+    background-color: #fcfcfc;
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+/* Better responsive layout */
+main section {
+    width: 100%;
+}
+
+/* Form and input alignment */
+input[type="text"],
+input[type="number"],
+input[type="date"],
+input[type="email"],
+input[type="password"],
+select,
+textarea {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Table responsiveness */
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+tbody tr {
+    vertical-align: middle;
+}
+
+/* Card alignment */
+.card-shadow {
+    box-shadow: 0 4px 24px -2px rgba(0, 0, 0, 0.04);
+    display: flex;
+    flex-direction: column;
+}
+
+/* Grid alignment */
+.grid {
+    gap: 1.5rem;
+}
+
+/* Button alignment */
+button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+}
+
+.nav-item.active {
+    background-color: var(--primary-dark);
+    color: white;
+    box-shadow: 0 10px 15px -3px rgba(13, 46, 39, 0.2);
+}
+
+.nav-item:hover {
+    color: white;
+    background-color: var(--primary-dark);
+    box-shadow: 0 10px 15px -3px rgba(13, 46, 39, 0.2);
+}
+
+/* Force lucide icon color to follow text color and stay visible */
+
+i[data-lucide], svg.lucide, .nav-item svg, .nav-item i[data-lucide], .mobile-nav svg, .mobile-nav i[data-lucide] {
+    color: inherit;
+    stroke: currentColor;
+    fill: none;
+}
+
+/* Better default for mobile nav and action icons */
+
+.md\:hidden i[data-lucide], .nav-item i[data-lucide] {
+    color: #0d2e27;
+}
+
+.nav-item i[data-lucide], .nav-item svg {
+    color: #0d2e27;
+    stroke: currentColor;
+}
+
+.section-fade {
+    animation: fadeIn 0.3s ease-in-out;
+    width: 100%;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+#modalOverlay,
+#mobileDrawerOverlay,
+#loadingOverlay,
+#splitModalOverlay,
+#splitDetailsOverlay {
+    backdrop-filter: blur(8px);
+    transition: opacity 0.3s ease;
+}
+
+.mobile-drawer {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Hidden class for modal/overlay elements */
+.hidden {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+}
+
+#loginPage.hidden {
+    pointer-events: none;
+    z-index: -1 !important;
+}
+
+/* Responsive text alignment */
+@media (max-width: 768px) {
+    main {
+        padding: 0.75rem;
+    }
+    
+    .grid {
+        grid-template-columns: 1fr !important;
+    }
+    
+    table {
+        font-size: 0.875rem;
+    }
+    
+    thead th {
+        padding: 0.75rem !important;
+    }
+    
+    tbody td {
+        padding: 0.75rem !important;
+    }
+}
+
+/* Flex helpers for alignment */
+.flex-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.flex-align-center {
+    display: flex;
+    align-items: center;
+}
+
+.flex-between {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}

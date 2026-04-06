@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flow Finance | Loading...</title>
+    
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(to bottom right, #f1f5f9, #e2e8f0);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+        .loader {
+            text-align: center;
+        }
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid #cbd5e1;
+            border-top-color: #0d2e27;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        p {
+            margin: 0;
+            color: #9ca3af;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+    <div class="loader">
+        <div class="spinner"></div>
+        <p>Initializing...</p>
+    </div>
+
+    <script>
+        // Simple redirect based on whether this is a login or dashboard request
+        // This prevents redirect loops
+        const currentPath = window.location.pathname;
+        
+        // If already on login.html or signup, don't redirect
+        if (currentPath.includes('login.html') || currentPath.includes('index.html')) {
+            window.location.href = '/login.html';
+        } else {
+            // For root path or unknown paths, go to login
+            window.location.href = '/login.html';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Config Test - Flow Finance</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            padding: 40px;
+            line-height: 1.6;
+            background: #f1f5f9;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        h1 { color: #0d2e27; margin-top: 0; }
+        .status { margin: 20px 0; padding: 15px; border-radius: 8px; }
+        .success { background: #dcfce7; color: #166534; }
+        .error { background: #fee2e2; color: #991b1b; }
+        .warning { background: #fef3c7; color: #92400e; }
+        pre {
+            background: #f3f4f6;
+            padding: 12px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+        code { font-family: 'Courier New', monospace; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Flow Finance - Config Test</h1>
+        <div id="results"></div>
+    </div>
+
+    <script type="module">
+        const resultsDiv = document.getElementById('results');
+        
+        async function testConfig() {
+            try {
+                // Test 1: Check if we can import config
+                console.log('Test 1: Importing config...');
+                const { firebaseConfig, appId, geminiApiKey } = await import('./js/config.js');
+                
+                let html = '';
+                
+                // Check firebaseConfig
+                if (firebaseConfig && firebaseConfig.apiKey) {
+                    html += '<div class="status success"><strong>✓ Firebase Config Loaded</strong><pre>';
+                    html += `Project: ${firebaseConfig.projectId}\n`;
+                    html += `API Key: ${firebaseConfig.apiKey.substring(0, 20)}...\n`;
+                    html += `Auth Domain: ${firebaseConfig.authDomain}</pre></div>`;
+                } else {
+                    html += '<div class="status error"><strong>✗ Firebase Config Missing</strong><p>Check config.js file has all Firebase variables</p></div>';
+                }
+                
+                // Check appId
+                if (appId) {
+                    html += '<div class="status success"><strong>✓ App ID Loaded</strong><pre>' + appId + '</pre></div>';
+                } else {
+                    html += '<div class="status warning"><strong>⚠ App ID Missing</strong></div>';
+                }
+                
+                // Check Gemini API Key
+                if (geminiApiKey) {
+                    html += '<div class="status success"><strong>✓ Gemini API Key Loaded</strong></div>';
+                } else {
+                    html += '<div class="status warning"><strong>⚠ Gemini API Key Missing</strong></div>';
+                }
+                
+                // Test 2: Try to initialize Firebase
+                html += '<hr style="margin: 30px 0; border: none; border-top: 1px solid #e5e7eb;">';
+                html += '<h2 style="color: #0d2e27;">Firebase Initialization Test</h2>';
+                
+                try {
+                    const { initializeApp } = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js');
+                    const app = initializeApp(firebaseConfig);
+                    html += '<div class="status success"><strong>✓ Firebase Initialized Successfully</strong></div>';
+                    
+                    // Try to get auth
+                    const { getAuth } = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js');
+                    const auth = getAuth(app);
+                    html += '<div class="status success"><strong>✓ Firebase Auth Ready</strong></div>';
+                    
+                } catch (err) {
+                    html += '<div class="status error"><strong>✗ Firebase Initialization Failed</strong><pre>' + err.message + '</pre></div>';
+                }
+                
+                html += '<hr><p style="color: #6b7280; font-size: 12px;">You can now click: <a href="/index.html" style="color: #0d2e27;">Go to App</a></p>';
+                
+                resultsDiv.innerHTML = html;
+                
+            } catch (err) {
+                resultsDiv.innerHTML = '<div class="status error"><strong>✗ Error Loading Config</strong><pre>' + err.message + '</pre></div>';
+                console.error('Config test error:', err);
+            }
+        }
+        
+        testConfig();
+    </script>
+</body>
+</html>
